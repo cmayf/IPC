@@ -37,6 +37,7 @@ public class ParallelTextSearch{
         counter++;
       } catch (InterruptedException e) {};
     }
+    return;
   }
 
 }

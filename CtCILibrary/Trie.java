@@ -11,6 +11,12 @@ public class Trie
     // The root of this trie.
     private TrieNode root;
 
+    // variable for longest word  w/ given prefix
+    private String lw;
+
+    // Trie alphabet
+    public static char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+
     /* Takes a list of strings as an argument, and constructs a trie that stores these strings. */
     public Trie(ArrayList<String> list) {
         root = new TrieNode();
@@ -24,6 +30,7 @@ public class Trie
     public Trie(String[] list) {
         root = new TrieNode();
         for (String word : list) {
+	    //System.out.println("added -> "+word);
             root.addWord(word);
         }
     }    
@@ -49,5 +56,57 @@ public class Trie
     
     public TrieNode getRoot() {
     	return root;
+    }
+
+    /* Preorder traversal of trie */
+    public void preorder(TrieNode node, int i) {
+	    if (node == null) return;
+	    System.out.print(node.getChar()+" ");
+	    preorder(node.getChild(alpha[i]), i+1);
+    }
+
+
+    /* Functions pertaining to longest word w/ given prefix */
+    private void setLongestWord(String w) {
+	    this.lw = w;
+    }
+
+    private String getLongestWord() {
+	    return lw;
+    }
+    
+    private String buildWord(TrieNode node, String prefix) {
+	    return prefix + recBuildWord(node, prefix);
+    }
+
+    private String recBuildWord(TrieNode node, String c) {
+	    if (node.terminates()) return c;
+	    // find next letter
+	    int i;
+	    for (i = 0; i < alpha.length; i++) {
+		    if (node.getChild(alpha[i]) != null) break;
+	    }
+	    TrieNode nextNode = node.getChild(alpha[i]);
+	    String nextChar = String.valueOf(nextNode.getChar());
+
+	    return c + recBuildWord(nextNode, nextChar); 
+    }
+
+    public String getLongestPrefixWord(String prefix) {
+	    setLongestWord(prefix);
+	    TrieNode lastNode = root;
+	    int i = 0;
+	    for (i = 0; i < prefix.length(); i++) {
+		    lastNode = lastNode.getChild(prefix.charAt(i));
+	    }
+
+	    for (i = 0; i < alpha.length; i++) {
+		    String lwcand = buildWord(lastNode, prefix);
+		    if (lwcand.length() > getLongestWord().length()) {
+			    setLongestWord(lwcand);
+		    }
+	    }
+
+	    return getLongestWord();
     }
 }

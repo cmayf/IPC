@@ -157,7 +157,7 @@ JNIEXPORT void JNICALL Java_edu_cs300_MessageJNI_writeLongestWordResponseMsg
     }
     else
         fprintf(stderr, "msgget: msgget succeeded: msgqid = %d\n", msqid);
-
+    
     const char *prefix = (*env)->GetStringUTFChars(env,prefixStr, NULL);
     const char *passageName = (*env)->GetStringUTFChars(env,passageNameStr, NULL);
     const char *longestWord = (*env)->GetStringUTFChars(env,longestWordStr, NULL);
@@ -181,7 +181,6 @@ JNIEXPORT void JNICALL Java_edu_cs300_MessageJNI_writeLongestWordResponseMsg
         strlcpy(rbuf.location_description,passageName,PASSAGE_NAME_LENGTH);
         strlcpy(rbuf.longest_word,longestWord,WORD_LENGTH);
     }
-    //
     // Send a message.
     if((msgsnd(msqid, &rbuf, buffer_length, IPC_NOWAIT)) < 0) {
         int errnum = errno;
@@ -201,3 +200,50 @@ JNIEXPORT void JNICALL Java_edu_cs300_MessageJNI_writeLongestWordResponseMsg
 }
 
 
+/*
+JNIEXPORT void JNICALL Java_edu_cs300_MessageJNI_writeNotFoundResponseMsg
+(JNIEnv *env , jobject obj, jint prefixID, jint present) {
+	int msqid;
+	int msgflg = IPC_CREAT | 0666;
+	key_t key;
+	response_buf rbuf;
+
+	key = ftok(CRIMSON_ID,QUEUE_NUMBER);
+	    if ((msqid = msgget(key, msgflg)) < 0) {
+		    int errnum = errno;                                                             
+		    fprintf(stderr, "Value of errno: %d\n", errno);
+		    perror("(msgget)");                                                             
+		    fprintf(stderr, "Error sending msg: %s\n", strerror( errnum ));
+	    }
+	    else fprintf(stderr, "msgget: msgget succeeded: msgqid = %d\n", msqid);
+
+	    int buffer_length=sizeof(response_buf)-sizeof(long); //int
+	    printf("msgsnd Reply %d of %d on %d:%s from %s present=%d lw=%s(len=%d) msglen=%d\n",passageIndex,passageCount,prefixID,prefix,passageName,present,longestWord,lwl,buffer_length);
+
+	    //We'll send message type 1
+	    rbuf.mtype = 2;
+	    rbuf.index=passageIndex; //index of response
+	    rbuf.count=passageCount; //total excerpts available
+	    rbuf.present=present; // if not found; 1 if found
+	    if (present ==0) { 
+		    strlcpy(rbuf.location_description,passageName,PASSAGE_NAME_LENGTH);
+		    strlcpy(rbuf.longest_word,"--",2);
+	    } else {
+		    strlcpy(rbuf.location_description,passageName,PASSAGE_NAME_LENGTH);
+		    strlcpy(rbuf.longest_word,longestWord,WORD_LENGTH);
+	    }
+
+	    // Send a message.
+            if((msgsnd(msqid, &rbuf, buffer_length, IPC_NOWAIT)) < 0) {
+		    int errnum = errno;
+		    perror("(msgsnd)");
+		    fprintf(stderr, "Error sending msg: %s\n", strerror( errnum ));
+		    exit(1);
+	    }
+	    else fprintf(stderr,"Message: \"%d:%s\" Sent\n",rbuf.index, rbuf.longest_word);
+
+	    (*env)->ReleaseStringUTFChars(env, prefixStr, prefix);
+	    (*env)->ReleaseStringUTFChars(env, passageNameStr, passageName);
+	    (*env)->ReleaseStringUTFChars(env, longestWordStr, longestWord);
+}
+*/

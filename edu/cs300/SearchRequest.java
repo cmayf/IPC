@@ -11,8 +11,21 @@ public class SearchRequest {
     this.prefix=reqPrefix;
   }
 
+  public SearchRequest() {
+	  this.requestID = -1;
+	  this.prefix = "---";
+  }
+
   public String toString(){
     return this.requestID+" "+this.prefix;
+  }
+
+  public int getRequestID() {
+	  return this.requestID;
+  }
+
+  public String getRequestPrefix() {
+	  return this.prefix;
   }
 
 }
