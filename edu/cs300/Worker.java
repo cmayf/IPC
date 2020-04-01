@@ -58,7 +58,7 @@ class Worker extends Thread{
 					  resultsOutputArray.put(present);
 				  }
 				  lastPrefix = prefix;
-			  } 
+			  }
 		  } catch(InterruptedException e){ System.out.println(e.getMessage()); }
 	  }
   }
