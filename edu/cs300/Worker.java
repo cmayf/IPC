@@ -8,7 +8,9 @@ class Worker extends Thread{
   ArrayBlockingQueue prefixRequestArray;
   ArrayBlockingQueue resultsOutputArray;
   int id;
+
   String passageName;
+  //int passageCount;
   String word;
   int present;
 
@@ -18,7 +20,6 @@ class Worker extends Thread{
 	  this.prefixRequestArray=prefix;
 	  this.resultsOutputArray=results;
 	  this.id=id;
-	  //this.passageName="Passage-"+Integer.toString(id)+".txt";//put name of passage here
 
   }
 
@@ -29,8 +30,8 @@ class Worker extends Thread{
 	  this.resultsOutputArray=results;
 	  this.id=id;
 	  this.passageName = pname;
+	  //this.passageCount = pcount;
 	  this.present = -1;
-	  //this.passageName="Passage-"+Integer.toString(id)+".txt";//put name of passage here
   }
 
   public void run() {
@@ -38,6 +39,7 @@ class Worker extends Thread{
 	  //while (true){
 	  try {
 		  String prefix=(String)this.prefixRequestArray.take();
+		  int prefixID = (int)this.prefixRequestArray.take();
 		  boolean found = this.textTrieTree.contains(prefix);
 
 		  if (!found){
@@ -55,10 +57,10 @@ class Worker extends Thread{
 			  resultsOutputArray.put(word);
 			  resultsOutputArray.put(present);
 		  }
+		  //new PassageProcessor().sendResponseMsg(prefixID, prefix, this.id, passageName, this.word, this.passageCount, this.present);
 	  } catch(InterruptedException e){
 		  System.out.println(e.getMessage());
 	  }
-	  //System.out.println("Worker-"+this.id+" ("+this.passageName+") thread FINISHED");
   }
 
 /* 

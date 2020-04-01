@@ -111,8 +111,9 @@ int main(int argc, char* argv[]) {
 	 * via System V ipc queues */
 	int r = 0;
 	while ( r < requestCount) {
-		printf("\nSEARCH MANAGER: msgsnd attempt\n");
-		if((msgsnd(msqid, &sbufs[r], sbuf_length, 0)) < 0) {
+		int prefixReportDone = 0;
+		//printf("\nSEARCH MANAGER: msgsnd\n");
+		if((msgsnd(msqid, &sbufs[r], sbuf_length, IPC_NOWAIT)) < 0) {
 			int errnum = errno;
 			fprintf(stderr,"%d, %ld, %s, %d\n", msqid, sbufs[r].mtype, sbufs[r].prefix, (int)sbuf_length);
 			perror("(msgsnd)");
@@ -125,7 +126,9 @@ int main(int argc, char* argv[]) {
 
 		/* Wait for passage processor to return series of responses */
 		// Get initial response of passage count
+		
 		response_buf init = rbuf;
+		do {
 		int valid_init = msgrcv(msqid, &init, sizeof(response_buf), 2, 0);
 		int errnum = errno;
 		if (valid_init < 0 && errno != EINTR) {
@@ -133,17 +136,19 @@ int main(int argc, char* argv[]) {
 			perror("Error printed by perror");
 			fprintf(stderr, "Error receiving msg: %s\n", strerror( errnum ));
 		}
-		while (init.count == rbuf.count) { printf("Waiting...\n"); wait(NULL); }
+		}
+		while (init.count == rbuf.count && r == 0); 
 		passageCount = init.count;
+		
 
 		// Get responses for each passage
 		response_buf rbufs[passageCount];
-		for (int p = 0; p < passageCount; p++) rbufs[p] = rbuf;
-		for (int p = 0; p < passageCount; p++) {
+		rbufs[0] = init;
+		for (int p = 1; p < passageCount; p++) {
 			int ret;
 			do {	
-				printf("\nSEARCH MANAGER: msgrcv attempt\n");
 				ret = msgrcv(msqid, &rbufs[p], sizeof(response_buf), 2, 0); //receive type 2 message
+				//printf("\nSEARCH MANAGER: msgrcv\n");
 				int errnum = errno;
 				if (ret < 0 && errno !=EINTR){
 					fprintf(stderr, "Value of errno: %d\n", errno);
@@ -152,17 +157,19 @@ int main(int argc, char* argv[]) {
 				}
 			} while ((ret < 0 ) && (errno != 4));
 		}
-		//while (rbufs[passageCount-1].count == rbuf.count) wait(NULL);
 
 
 		/* Print prefix for each response */
+		do {
 		printf("Report %s\n", sbufs[r].prefix);
 		for (int p = 0; p < passageCount; p++) {
 			printf("Passage %d - %s - %s\n", p, sbufs[r].prefix, rbufs[p].longest_word);
 		}
 		printf("\n");
+		prefixReportDone = 1;
+		} while (prefixReportDone = 0);
 		r++;
-		//sleep(secsBetweenRequests);
+		sleep(secsBetweenRequests);
 	}
 
 	/* Send message to passage processor letting
