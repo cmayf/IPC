@@ -45,8 +45,8 @@ strlcpy(char *dst, 		// O - Destination string
 #endif 
 
 //Global vars for SIGINT capture
-char* pref[100];
-int prefStatus[100] = {0};
+char* pref[1000];
+int prefStatus[1000] = {0};
 int requestCount;
 int passageCount;
 
