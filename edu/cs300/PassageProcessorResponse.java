@@ -4,7 +4,7 @@ import java.util.concurrent.*;
 class PassageProcessorResponse extends Thread {
 	
 	static { System.loadLibrary("system5msg"); }
-
+	
 	ArrayBlockingQueue result;
 	int prefixID;
 	String prefix;

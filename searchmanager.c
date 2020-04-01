@@ -161,6 +161,7 @@ int main(int argc, char* argv[]) {
 
 		/* Print prefix for each response */
 		do {
+			sleep(1);
 			qsort(rbufs, sizeof(rbufs)/sizeof(*rbufs), sizeof(*rbufs), cmp);
 			printf("\nReport %s\n", sbufs[r].prefix);
 			for (int p = 0; p < passageCount; p++) {

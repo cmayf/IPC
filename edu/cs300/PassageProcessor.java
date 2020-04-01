@@ -48,7 +48,6 @@ public class PassageProcessor
 			try {
 			while (req.getRequestID() == -1) {
 				req = new MessageJNI().readPrefixRequestMsg();
-				Thread.sleep(100);
 			}
 			if (req.getRequestID() == 0) break;
 			} catch(Exception e) {System.out.println(e);}
@@ -57,7 +56,6 @@ public class PassageProcessor
 			while (p < passageCount) {
 				try {
 				workers[p].put(req.getRequestPrefix());	
-				if (r > 0) executor.execute(new Worker(passages[p], passageList.get(p), p, workers[p], results[p]));
 				executor.execute(new PassageProcessorResponse(req.getRequestID(), req.getRequestPrefix(), p+1, passageList.get(p), passageCount, results[p]));
 				} catch (InterruptedException e) {e.printStackTrace();}
 				p++;
@@ -66,6 +64,7 @@ public class PassageProcessor
 		}
 		executor.shutdown();
 		System.out.println("Terminating ...");
+		System.exit(0);
 	}
 
 

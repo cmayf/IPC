@@ -34,30 +34,32 @@ class Worker extends Thread{
 
   public void run() {
 	  System.out.println("Worker-"+this.id+" ("+this.passageName+") thread started ...");
-	  try {
-		  while (prefixRequestArray.isEmpty()) Thread.sleep(100);
-		  String prefix = (String)this.prefixRequestArray.take();
-		  boolean found = this.textTrieTree.contains(prefix);
+	  String prefix = "prefix";
+	  String lastPrefix = "lastPrefix";
+	  String exitPrefix = "   ";
 
-		  if (!found){
-			  present = 0;
-			  this.word = "----";
-			  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> not found ");
-			  resultsOutputArray.put(word);
-			  resultsOutputArray.put(present);
-		  } else{
-			  present = 1;
-			  findWord(prefix);
-			  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> "+this.word);
-			  resultsOutputArray.put(word);
-			  resultsOutputArray.put(present);
-		  }
-	  } catch(InterruptedException e){
-		  System.out.println(e.getMessage());
+	  while (true) {
+		  if (prefix == exitPrefix) break;
+		  try {
+			  prefix = (String)this.prefixRequestArray.take();
+			  if (prefix != lastPrefix) {
+				  boolean found = this.textTrieTree.contains(prefix);
+				  if (!found){
+					  present = 0;
+					  this.word = "----";
+					  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> not found ");
+					  resultsOutputArray.put(word);
+					  resultsOutputArray.put(present);
+				  } else{
+					  present = 1;
+					  this.word = textTrieTree.getLongestPrefixWord(prefix);
+					  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> "+this.word);
+					  resultsOutputArray.put(word);
+					  resultsOutputArray.put(present);
+				  }
+				  lastPrefix = prefix;
+			  } 
+		  } catch(InterruptedException e){ System.out.println(e.getMessage()); }
 	  }
-  }
-
-  public void findWord(String prefix) throws InterruptedException {
-	  this.word = textTrieTree.getLongestPrefixWord(prefix);
   }
 }

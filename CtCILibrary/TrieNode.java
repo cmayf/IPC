@@ -11,7 +11,7 @@ public class TrieNode {
     private boolean terminates = false;
 
     // The character stored in this node as data.
-    private char character;	
+    private char character;
 
 	/* Constructs a trie node and stores this character as the node's value.
 	 * Initializes the list of child nodes of this node to an empty hash map. */

@@ -57,15 +57,7 @@ public class Trie
     public TrieNode getRoot() {
     	return root;
     }
-
-    /* Preorder traversal of trie */
-    public void preorder(TrieNode node, int i) {
-	    if (node == null) return;
-	    System.out.print(node.getChar()+" ");
-	    preorder(node.getChild(alpha[i]), i+1);
-    }
-
-
+	
     /* Functions pertaining to longest word w/ given prefix */
     private void setLongestWord(String w) {
 	    this.lw = w;
@@ -76,37 +68,44 @@ public class Trie
     }
     
     private String buildWord(TrieNode node, String prefix) {
-	    return recBuildWord(node, prefix);
+	    String longestWord = prefix;
+	    for (int i = 0; i < alpha.length; i++) {
+		    String lwcand = recBuildWord(node, prefix, i);
+		    if (lwcand.length() > longestWord.length()) 
+			    longestWord = lwcand;
+	    }
+	    return longestWord;
     }
 
-    private String recBuildWord(TrieNode node, String c) {
+    private String recBuildWord(TrieNode node, String c, int index) {
+	    if (node == null) return "";
 	    if (node.terminates()) return c;
-	    // find next letter
-	    int i;
-	    for (i = 0; i < alpha.length; i++) {
-	    	if (node.getChild(alpha[i]) != null) break;
+	    // Find all possible children
+	    boolean multipleNodesMatch = false;
+	    ArrayList<Integer> nodes = new ArrayList<Integer>();
+	    while (index < alpha.length) {
+		    if (node.getChild(alpha[index]) != null) nodes.add(index);
+		    index++;
 	    }
-	    TrieNode nextNode = node.getChild(alpha[i]);
-	    String nextChar = String.valueOf(nextNode.getChar());
-	    return c + recBuildWord(nextNode, nextChar);
+	    // Find longest word from possible children
+	    String ret = "";
+	    for (Integer nodeIndex : nodes) {
+		    TrieNode currNode = node.getChild(alpha[nodeIndex]);
+		    String currChar = String.valueOf(alpha[nodeIndex]);
+		    String tmp = c + recBuildWord(currNode, currChar, 0);
+		    if (tmp.length() > ret.length()) ret = tmp;
+	    }
+	    return ret;
     }
 
     public String getLongestPrefixWord(String prefix) {
-	    setLongestWord(prefix);
-	    TrieNode lastNode = root;
+	    // navigate to root of prefix
+	    TrieNode prefixNode = root;
 	    int i = 0;
 	    for (i = 0; i < prefix.length(); i++) {
-		    lastNode = lastNode.getChild(prefix.charAt(i));
+		    prefixNode = prefixNode.getChild(prefix.charAt(i));
 	    }
-	    
-	    TrieNode currNode = lastNode;
-	    for (i = 0; i < alpha.length; i++) {
-		    String lwcand = buildWord(currNode, prefix);
-		    if (lwcand.length() > getLongestWord().length()) {
-			    setLongestWord(lwcand);
-		    }
-	    }
-
+	    setLongestWord(buildWord(prefixNode, prefix));
 	    return getLongestWord();
     }
 }
