@@ -10,7 +10,6 @@ class Worker extends Thread{
   int id;
 
   String passageName;
-  //int passageCount;
   String word;
   int present;
 
@@ -30,15 +29,14 @@ class Worker extends Thread{
 	  this.resultsOutputArray=results;
 	  this.id=id;
 	  this.passageName = pname;
-	  //this.passageCount = pcount;
 	  this.present = -1;
   }
 
   public void run() {
 	  System.out.println("Worker-"+this.id+" ("+this.passageName+") thread started ...");
-	  //while (true){
 	  try {
-		  String prefix=(String)this.prefixRequestArray.take();
+		  while (prefixRequestArray.isEmpty()) Thread.sleep(100);
+		  String prefix = (String)this.prefixRequestArray.take();
 		  int prefixID = (int)this.prefixRequestArray.take();
 		  boolean found = this.textTrieTree.contains(prefix);
 
@@ -46,33 +44,21 @@ class Worker extends Thread{
 			  present = 0;
 			  this.word = "----";
 			  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> not found ");
-			  //resultsOutputArray.put(passageName+":"+prefix+" not found");
 			  resultsOutputArray.put(word);
 			  resultsOutputArray.put(present);
 		  } else{
 			  present = 1;
-			  this.word = textTrieTree.getLongestPrefixWord(prefix);
+			  findWord(prefix);
 			  System.out.println("Worker-"+this.id+" "+this.passageName+":"+ prefix+" ==> "+this.word);
-			  //resultsOutputArray.put(passageName+":"+prefix+" found ");
 			  resultsOutputArray.put(word);
 			  resultsOutputArray.put(present);
 		  }
-		  //new PassageProcessor().sendResponseMsg(prefixID, prefix, this.id, passageName, this.word, this.passageCount, this.present);
 	  } catch(InterruptedException e){
 		  System.out.println(e.getMessage());
 	  }
   }
 
-/* 
-  public boolean wordPresent() throws InterruptedException {
-	  String prefix = (String)this.prefixRequestArray.take();
-	  boolean found = this.textTrieTree.contains(prefix);
-	  return found;
+  public void findWord(String prefix) throws InterruptedException {
+	  this.word = textTrieTree.getLongestPrefixWord(prefix);
   }
-/*
-  public String getWord() throws InterruptedException {
-	  String prefix = (String)this.prefixRequestArray.take();
-	  return textTrieTree.getLongestPrefixWord(prefix);
-  }
-*/
 }
