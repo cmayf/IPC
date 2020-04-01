@@ -30,8 +30,8 @@ public class Trie
     public Trie(String[] list) {
         root = new TrieNode();
         for (String word : list) {
-	    //System.out.println("added -> "+word);
             root.addWord(word);
+	    //System.out.println("added -> "+word);
         }
     }    
 
@@ -76,7 +76,7 @@ public class Trie
     }
     
     private String buildWord(TrieNode node, String prefix) {
-	    return prefix + recBuildWord(node, prefix);
+	    return recBuildWord(node, prefix);
     }
 
     private String recBuildWord(TrieNode node, String c) {
@@ -84,12 +84,11 @@ public class Trie
 	    // find next letter
 	    int i;
 	    for (i = 0; i < alpha.length; i++) {
-		    if (node.getChild(alpha[i]) != null) break;
+	    	if (node.getChild(alpha[i]) != null) break;
 	    }
 	    TrieNode nextNode = node.getChild(alpha[i]);
 	    String nextChar = String.valueOf(nextNode.getChar());
-
-	    return c + recBuildWord(nextNode, nextChar); 
+	    return c + recBuildWord(nextNode, nextChar);
     }
 
     public String getLongestPrefixWord(String prefix) {
@@ -99,9 +98,10 @@ public class Trie
 	    for (i = 0; i < prefix.length(); i++) {
 		    lastNode = lastNode.getChild(prefix.charAt(i));
 	    }
-
+	    
+	    TrieNode currNode = lastNode;
 	    for (i = 0; i < alpha.length; i++) {
-		    String lwcand = buildWord(lastNode, prefix);
+		    String lwcand = buildWord(currNode, prefix);
 		    if (lwcand.length() > getLongestWord().length()) {
 			    setLongestWord(lwcand);
 		    }

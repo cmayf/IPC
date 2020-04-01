@@ -31,18 +31,8 @@ public class PassageProcessor
 			passages[i] = passage.toArray(passages[i]);
 		}
 
-		int requestCount = 4;
-		int resultCount = passageCount * requestCount;
-
-		SearchRequest[] requests = new SearchRequest[requestCount];
-		for (int i = 0; i < requestCount; i++) {
-			requests[i] = new SearchRequest();
-		}
-		int[] ids = new int[requestCount];
-		String[] prefixes = new String[requestCount];
 		ArrayBlockingQueue[] workers = new ArrayBlockingQueue[passageCount];
 		ArrayBlockingQueue[] results = new ArrayBlockingQueue[passageCount];
-
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (int p = 0; p < passageCount; p++) {
 			workers[p] = new ArrayBlockingQueue(100);
@@ -51,32 +41,31 @@ public class PassageProcessor
 		}
 
 		int r = 0;
-		while (r < requestCount && requests[r].getRequestID() != 0) {
+		SearchRequest req = new SearchRequest();
+		while (req.getRequestID() != 0) {
 			/* Read each prefix request from the System V ipc queue */
+			req = new SearchRequest();
 			try {
-			while (requests[r].getRequestID() == -1) {
-				requests[r] = new MessageJNI().readPrefixRequestMsg();
+			while (req.getRequestID() == -1) {
+				req = new MessageJNI().readPrefixRequestMsg();
 				Thread.sleep(100);
 			}
-			if (requests[r].getRequestID() == 0) break;
-			ids[r] = requests[r].getRequestID();
-			prefixes[r] = requests[r].getRequestPrefix();
+			if (req.getRequestID() == 0) break;
 			} catch(Exception e) {System.out.println(e);}
 
 			int p = 0;
 			while (p < passageCount) {
 				try {
-				workers[p].put(prefixes[r]);	
-				workers[p].put(ids[r]);
+				workers[p].put(req.getRequestPrefix());	
 				if (r > 0) executor.execute(new Worker(passages[p], passageList.get(p), p, workers[p], results[p]));
-				executor.execute(new PassageProcessorResponse(ids[r], prefixes[r], p+1, passageList.get(p), passageCount, results[p]));
+				executor.execute(new PassageProcessorResponse(req.getRequestID(), req.getRequestPrefix(), p+1, passageList.get(p), passageCount, results[p]));
 				} catch (InterruptedException e) {e.printStackTrace();}
 				p++;
 			}
 			r++;
 		}
 		executor.shutdown();
-		System.out.println("PASSAGE PROCESSOR EXITED");
+		System.out.println("Terminating ...");
 	}
 
 

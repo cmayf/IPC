@@ -8,13 +8,10 @@
  * on a prefix returned, the next can be sent to the passage processor
  * Send a prefix message with a zero id to notify the passage processor to complete */
 
-//#include "edu_cs300_MessageJNI.h"
-
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/wait.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,53 +19,54 @@
 #include <errno.h>
 #include <signal.h>
 #include <pthread.h>
-//#include <jni.h>
-
 #include "longest_word_search.h"
 #include "queue_ids.h"
-
-
+ 
 #ifndef mac
-size_t  			/* O - Length of string */ 
-strlcpy(char *dst, 		/* O - Destination string */ 
-	const char *src, 	/* I - Source string */ 
-	size_t size) 		/* I - Size of destination string buffer */
+size_t  			// O - Length of string 
+strlcpy(char *dst, 		// O - Destination string
+	const char *src, 	// I - Source string
+	size_t size) 		// I - Size of destination string buffer
 {
-	size_t    srclen;         /* Length of source string */
+	size_t    srclen;       //Length of source string
 
-
-	/*
-	 *      * Figure out how much room is needed...
-	 *           */
-
+	//Figure out how much room is needed...
 	size --;
-
 	srclen = strlen(src);
 
-	/*
-	 *      * Copy the appropriate amount...
-	 *           */
-
+	//Copy the appropriate amount...
 	if (srclen > size)                                                                     
 		srclen = size;
 
 	memcpy(dst, src, srclen);
 	dst[srclen] = '\0';
-
 	return (srclen);                                                               
 }
-#endif
+#endif 
 
-	void sig_handler(int signo) {
-		// Print status of requests when SIGINT is recieved 
-		if (signo == SIGINT) {
-			printf("INTERRUPT\n");
-			//for (int i = 0; i < 3; i++) {
-				//printf("%s - %d of %d\n", sbuf[i].prefix, rbuf[i].index, rbuf[i].passageCount);
-			//}
-			exit(0);
+//Global vars for SIGINT capture
+char* pref[100];
+int prefStatus[100] = {0};
+int requestCount;
+int passageCount;
+
+// Compare function for qsorting response buffers	
+int cmp(const void *a, const void *b) {
+	response_buf *A = (response_buf *)a;
+	response_buf *B = (response_buf *)b;
+	return (A->index - B->index);
+}
+
+// SIGINT handler: prints status of requests
+void sig_handler(int signo) {
+	if (signo == SIGINT) {
+		printf("INTERRUPT\n");
+		for (int i = 0; i < requestCount; i++) {
+			printf("%s - %d of %d\n", pref[i], prefStatus[i], passageCount);
 		}
+		exit(0);
 	}
+}
 
 int main(int argc, char* argv[]) {
 	if (signal(SIGINT, sig_handler) == SIG_ERR) {
@@ -77,8 +75,8 @@ int main(int argc, char* argv[]) {
 
 	/* Read secs between sending prefix request from cmd line */
 	int secsBetweenRequests = atoi(argv[1]);
-	int requestCount = argc - 2;
-	int passageCount = 0;
+	requestCount = argc - 2;
+	passageCount = 0;
 
 	int msqid;
 	int msgflg = IPC_CREAT | 0666;
@@ -98,13 +96,15 @@ int main(int argc, char* argv[]) {
 
 	/* Read prefixes from cmd line */
 	prefix_buf sbufs[requestCount];
-	for (int i = 0; i < requestCount; i++) sbufs[i] = sbuf;
+	//for (int i = 0; i < requestCount; i++) sbufs[i] = sbuf;
 	for (int i = 0; i < requestCount; i++) {
+		//printf("processing prefixes...\n");
 		sbuf.mtype = 1;
 		strlcpy(sbuf.prefix, argv[i+2], WORD_LENGTH);
 		sbuf.id = i + 1;
 		sbuf_length = strlen(sbuf.prefix) + sizeof(int)+1;
 		sbufs[i] = sbuf;
+		pref[i] = strdup(sbufs[i].prefix);
 	}
 
 	/* Send prefix request messages (prefix string & prefix ID)
@@ -126,7 +126,6 @@ int main(int argc, char* argv[]) {
 
 		/* Wait for passage processor to return series of responses */
 		// Get initial response of passage count
-		
 		response_buf init = rbuf;
 		do {
 		int valid_init = msgrcv(msqid, &init, sizeof(response_buf), 2, 0);
@@ -139,7 +138,7 @@ int main(int argc, char* argv[]) {
 		}
 		while (init.count == rbuf.count && r == 0); 
 		passageCount = init.count;
-		
+		prefStatus[r] += 1;
 
 		// Get responses for each passage
 		response_buf rbufs[passageCount];
@@ -156,17 +155,22 @@ int main(int argc, char* argv[]) {
 					fprintf(stderr, "Error receiving msg: %s\n", strerror( errnum ));
 				}
 			} while ((ret < 0 ) && (errno != 4));
+			prefStatus[r] += 1;
 		}
 
 
 		/* Print prefix for each response */
 		do {
-		printf("Report %s\n", sbufs[r].prefix);
-		for (int p = 0; p < passageCount; p++) {
-			printf("Passage %d - %s - %s\n", p, sbufs[r].prefix, rbufs[p].longest_word);
-		}
-		printf("\n");
-		prefixReportDone = 1;
+			qsort(rbufs, sizeof(rbufs)/sizeof(*rbufs), sizeof(*rbufs), cmp);
+			printf("\nReport %s\n", sbufs[r].prefix);
+			for (int p = 0; p < passageCount; p++) {
+				if (rbufs[p].present == 0)
+					printf("Passage %d - %s - not found\n", p, rbufs[p].location_description);
+				else
+					printf("Passage %d - %s - %s\n", p, rbufs[p].location_description, rbufs[p].longest_word);
+			}
+			printf("\n");
+			prefixReportDone = 1;
 		} while (prefixReportDone = 0);
 		r++;
 		sleep(secsBetweenRequests);
@@ -189,7 +193,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	/* When all responses are recieved search manager terminates. */
-	printf("Exiting ...");
+	printf("Exiting ... ");
 	exit(0);
 
 }
