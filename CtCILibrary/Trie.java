@@ -66,19 +66,8 @@ public class Trie
     private String getLongestWord() {
 	    return lw;
     }
-    
-    private String buildWord(TrieNode node, String prefix) {
-	    String longestWord = prefix;
-	    for (int i = 0; i < alpha.length; i++) {
-		    String lwcand = recBuildWord(node, prefix, i);
-		    if (lwcand.length() > longestWord.length()) 
-			    longestWord = lwcand;
-	    }
-	    return longestWord;
-    }
 
     private String recBuildWord(TrieNode node, String c, int index) {
-	    if (node == null) return "";
 	    if (node.terminates()) return c;
 	    // Find all possible children
 	    boolean multipleNodesMatch = false;
@@ -93,7 +82,7 @@ public class Trie
 		    TrieNode currNode = node.getChild(alpha[nodeIndex]);
 		    String currChar = String.valueOf(alpha[nodeIndex]);
 		    String tmp = c + recBuildWord(currNode, currChar, 0);
-		    if (tmp.length() > ret.length()) ret = tmp;
+		    if (tmp.length() >= ret.length()) ret = tmp;
 	    }
 	    return ret;
     }
@@ -105,7 +94,7 @@ public class Trie
 	    for (i = 0; i < prefix.length(); i++) {
 		    prefixNode = prefixNode.getChild(prefix.charAt(i));
 	    }
-	    setLongestWord(buildWord(prefixNode, prefix));
+	    setLongestWord(recBuildWord(prefixNode, prefix, 0));
 	    return getLongestWord();
     }
 }

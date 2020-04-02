@@ -14,8 +14,10 @@ public class PassageProcessor
 {	
 	static { System.loadLibrary("system5msg"); }
 
-	private static final String FILE_PATH = "/home/cgmayfield/OS-Project/passages.txt";
-	private static final String FILE_PATH2 = "/home/cgmayfield/OS-Project/";
+	//private static final String FILE_PATH = "/home/cgmayfield/OS-Project/passages.txt";
+	//private static final String FILE_PATH2 = "/home/cgmayfield/OS-Project/";
+	private static final String FILE_PATH = "/home/user/OS-Project/passages.txt";
+	private static final String FILE_PATH2 = "/home/user/OS-Project/";
 	
 	public static void main(String[] args) throws Exception {
                 /* Read a series of passage file names from passages.txt */
