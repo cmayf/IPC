@@ -1,4 +1,4 @@
-# Spring_cs300_project
+# CS300 Project
 
 Git Repository for project files
 
