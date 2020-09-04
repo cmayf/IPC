@@ -1,4 +1,4 @@
-# CS300 Project
+# Operating Systems Project
 
 Git Repository for project files
 
